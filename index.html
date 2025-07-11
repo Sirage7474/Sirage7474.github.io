@@ -300,9 +300,6 @@
         <label>Face color:
             <input type="color" id="face-color" value="#00ffff">
         </label>
-        <label>Side color:
-            <input type="color" id="side-color" value="#ffff00">
-        </label>
         <label>Outline color:
             <input type="color" id="outline-color" value="#ffffff">
         </label>
@@ -352,15 +349,12 @@
         };
         // Color pickers
         const faceColor = document.getElementById('face-color');
-        const sideColor = document.getElementById('side-color');
         const outlineColor = document.getElementById('outline-color');
         function updateColors() {
             document.documentElement.style.setProperty('--face-color', faceColor.value);
-            document.documentElement.style.setProperty('--side-color', sideColor.value);
             document.documentElement.style.setProperty('--outline-color', outlineColor.value);
         }
         faceColor.oninput = updateColors;
-        sideColor.oninput = updateColors;
         outlineColor.oninput = updateColors;
         updateColors();
         // Size sliders
