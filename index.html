@@ -307,15 +307,15 @@
         </label>
         <label>X size:
             <input type="range" id="size-x-slider" min="-5" max="5" step="0.01" value="1">
-            <span id="size-x-value">1.00</span>
+            <input type="number" id="size-x-number" min="-5" max="5" step="0.01" value="1" style="width:60px; margin-left:6px;">
         </label>
         <label>Y size:
             <input type="range" id="size-y-slider" min="-5" max="5" step="0.01" value="1">
-            <span id="size-y-value">1.00</span>
+            <input type="number" id="size-y-number" min="-5" max="5" step="0.01" value="1" style="width:60px; margin-left:6px;">
         </label>
         <label>Z size:
             <input type="range" id="size-z-slider" min="-5" max="5" step="0.01" value="1">
-            <span id="size-z-value">1.00</span>
+            <input type="number" id="size-z-number" min="-5" max="5" step="0.01" value="1" style="width:60px; margin-left:6px;">
         </label>
         <label>Timeline duration (seconds):
             <input type="number" id="timeline-duration" min="1" max="60" value="5" style="width:60px;">
@@ -366,18 +366,43 @@
         const sizeXSlider = document.getElementById('size-x-slider');
         const sizeYSlider = document.getElementById('size-y-slider');
         const sizeZSlider = document.getElementById('size-z-slider');
-        const sizeXValue = document.getElementById('size-x-value');
-        const sizeYValue = document.getElementById('size-y-value');
-        const sizeZValue = document.getElementById('size-z-value');
-        function updateSize() {
-            sizeXValue.textContent = parseFloat(sizeXSlider.value).toFixed(2);
-            sizeYValue.textContent = parseFloat(sizeYSlider.value).toFixed(2);
-            sizeZValue.textContent = parseFloat(sizeZSlider.value).toFixed(2);
+        const sizeXNumber = document.getElementById('size-x-number');
+        const sizeYNumber = document.getElementById('size-y-number');
+        const sizeZNumber = document.getElementById('size-z-number');
+        function updateSize(from) {
+            // Sync slider <-> number
+            if (from === 'x-slider') sizeXNumber.value = sizeXSlider.value;
+            if (from === 'x-number') {
+                let v = parseFloat(sizeXNumber.value);
+                if (v > 5) v = 5;
+                if (v < -5) v = -5;
+                sizeXNumber.value = v;
+                sizeXSlider.value = v;
+            }
+            if (from === 'y-slider') sizeYNumber.value = sizeYSlider.value;
+            if (from === 'y-number') {
+                let v = parseFloat(sizeYNumber.value);
+                if (v > 5) v = 5;
+                if (v < -5) v = -5;
+                sizeYNumber.value = v;
+                sizeYSlider.value = v;
+            }
+            if (from === 'z-slider') sizeZNumber.value = sizeZSlider.value;
+            if (from === 'z-number') {
+                let v = parseFloat(sizeZNumber.value);
+                if (v > 5) v = 5;
+                if (v < -5) v = -5;
+                sizeZNumber.value = v;
+                sizeZSlider.value = v;
+            }
             setShapeRotation();
         }
-        sizeXSlider.oninput = updateSize;
-        sizeYSlider.oninput = updateSize;
-        sizeZSlider.oninput = updateSize;
+        sizeXSlider.oninput = () => updateSize('x-slider');
+        sizeXNumber.oninput = () => updateSize('x-number');
+        sizeYSlider.oninput = () => updateSize('y-slider');
+        sizeYNumber.oninput = () => updateSize('y-number');
+        sizeZSlider.oninput = () => updateSize('z-slider');
+        sizeZNumber.oninput = () => updateSize('z-number');
         // Drag to rotate (for both shapes) using move handle
         const moveHandle = document.getElementById('move-handle');
         let isDragging = false;
