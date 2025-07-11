@@ -285,10 +285,15 @@
         <span style="font-size:2.5rem;color:#fff;letter-spacing:2px;">Made By Sirage7474</span>
         <span style="font-size:0.95rem;color:#bbb;margin-top:10px;letter-spacing:1px;">Recommended for desktop</span>
     </div>
-    <div id="topbar-btns" style="position: absolute; top: 20px; left: 20px; z-index: 20; display: flex; gap: 12px;">
+    <div id="topbar-btns" style="position: absolute; top: 20px; left: 10px; z-index: 20; display: flex; gap: 8px; flex-wrap: wrap; max-width: 90vw; align-items: center;">
         <button id="toggle-timeline-btn">Hide Timeline</button>
         <button id="play-btn">▶️</button>
         <button id="toggle-movehandle-btn">Hide Move Handle</button>
+        <label style="display:flex;align-items:center;gap:4px;margin-left:8px;font-size:0.98em;color:#fff;">
+            <span style="color:#fff;">Speed:</span>
+            <input id="speed-input" type="number" min="0.1" max="10" step="0.1" value="1" style="width:50px;">
+            <span style="font-size:0.95em;color:#fff;">X</span>
+        </label>
     </div>
     <button id="settings-btn" style="position: absolute; top: 20px; right: 20px; z-index: 20;">⚙️ Settings</button>
     <div id="settings-panel">
@@ -566,7 +571,7 @@
     };
     function animateTimeline() {
         if (!isPlaying) return;
-        currentTime += 1/60;
+        currentTime += (1/60) * playbackSpeed;
         if (currentTime > TIMELINE_DURATION) {
             currentTime = 0;
             isPlaying = false;
@@ -631,6 +636,18 @@
             toggleMoveHandleBtn.textContent = 'Show Move Handle';
         }
     };
+
+    // Speed control logic
+    const speedInput = document.getElementById('speed-input');
+    let playbackSpeed = 1;
+    speedInput.oninput = function() {
+        let v = parseFloat(speedInput.value);
+        if (v < 0.1) v = 0.1;
+        if (v > 10) v = 10;
+        speedInput.value = v;
+        playbackSpeed = v;
+    };
+    playbackSpeed = parseFloat(speedInput.value);
 
     // Splash screen logic
     const splash = document.getElementById('splash');
