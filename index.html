@@ -226,10 +226,12 @@
         }
         #timeline-bar {
             position: fixed; left: 0; right: 0; bottom: 0; height: 80px; background: #181818;
-            display: flex; align-items: center; padding: 0 40px; z-index: 10;
+            display: flex; align-items: center; padding: 0 10px; z-index: 10;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
         }
         #timeline {
-            flex: 1; height: 24px; background: #444; border-radius: 8px; margin: 0 16px; position: relative;
+            flex: 1; min-width: 300px; height: 24px; background: #444; border-radius: 8px; margin: 0 12px; position: relative;
             box-shadow: 0 2px 8px #000a;
         }
         .timeline-tick {
@@ -246,6 +248,35 @@
         #scrubber {
             position: absolute; top: -8px; width: 4px; height: 32px; background: #0ff; border-radius: 2px;
             pointer-events: none; z-index: 5;
+        }
+        #topbar-btns {
+            position: absolute; top: 20px; left: 10px; z-index: 20; display: flex; gap: 8px;
+            flex-wrap: wrap;
+            max-width: 90vw;
+        }
+        #settings-btn {
+            position: absolute; top: 20px; right: 10px; z-index: 20;
+        }
+        @media (max-width: 600px) {
+            #settings-panel {
+                top: 60px; right: 5vw; left: 5vw; max-width: 90vw; min-width: unset;
+                font-size: 0.95rem;
+            }
+            #topbar-btns {
+                top: 10px; left: 5px; gap: 6px;
+                max-width: 98vw;
+            }
+            #settings-btn {
+                top: 10px; right: 5px;
+            }
+            #timeline-bar {
+                height: 70px;
+                padding: 0 2px;
+            }
+            button {
+                font-size: 0.95rem;
+                padding: 7px 10px;
+            }
         }
     </style>
 </head>
