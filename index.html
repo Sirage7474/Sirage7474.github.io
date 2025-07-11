@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Shape Settings</title>
+    <style>
+        body { 
+            margin: 0; 
+            height: 100vh; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            background: #222;
+        }
+        .scene {
+            width: 300px;
+            height: 300px;
+            perspective: 800px;
+            position: relative;
+        }
+        .cube, .pyramid {
+            width: 100px;
+            height: 100px;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform-style: preserve-3d;
+            transition: transform 0.2s;
+            transform: translate(-50%, -50%);
+        }
+        .face {
+            position: absolute;
+            width: 100px;
+            height: 100px;
+            background: var(--face-color, rgba(0,255,255,0.7));
+            border: 2px solid var(--outline-color, #fff);
+        }
+        .cube .front  { transform: translateZ(50px); }
+        .cube .back   { transform: rotateY(180deg) translateZ(50px); }
+        .cube .right  { transform: rotateY(90deg) translateZ(50px); }
+        .cube .left   { transform: rotateY(-90deg) translateZ(50px); }
+        .cube .top    { transform: rotateX(90deg) translateZ(50px); }
+        .cube .bottom { transform: rotateX(-90deg) translateZ(50px); }
+        /* Pyramid (true 3D, square base, 4 triangles meeting at apex) */
+        .pyramid {
+            width: 100px;
+            height: 100px;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform-style: preserve-3d;
+            transition: transform 0.2s;
+            transform: translate(-50%, -50%);
+        }
+        .pyramid .base {
+            position: absolute;
+            width: 100px;
+            height: 100px;
+            background: var(--face-color, rgba(0,255,255,0.7));
+            border: 2px solid var(--outline-color, #fff);
+            transform: rotateX(90deg) translateZ(50px);
+        }
+        .pyramid .face {
+            position: absolute;
+            width: 100px;
+            height: 100px;
+            background: var(--side-color, rgba(255,255,0,0.7));
+            border: 2px solid var(--outline-color, #fff);
+            clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+            left: 0;
+            top: 0;
+        }
+        /* Each face is rotated and tilted to meet at the apex */
+        .pyramid .face1 {
+            transform: rotateY(0deg) rotateX(-60deg) translateZ(50px);
+            transform-origin: 50% 100%;
+        }
+        .pyramid .face2 {
+            transform: rotateY(90deg) rotateX(-60deg) translateZ(50px);
+            transform-origin: 50% 100%;
+        }
+        .pyramid .face3 {
+            transform: rotateY(180deg) rotateX(-60deg) translateZ(50px);
+            transform-origin: 50% 100%;
+        }
+        .pyramid .face4 {
+            transform: rotateY(-90deg) rotateX(-60deg) translateZ(50px);
+            transform-origin: 50% 100%;
+        }
+        /* Cylinder 3D */
+        .cylinder {
+            width: 100px;
+            height: 100px;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform-style: preserve-3d;
+            transition: transform 0.2s;
+            transform: translate(-50%, -50%);
+        }
+        .cyl-top, .cyl-bottom {
+            position: absolute;
+            width: 100px;
+            height: 100px;
+            background: var(--face-color, rgba(0,255,255,0.7));
+            border: 2px solid var(--outline-color, #fff);
+            border-radius: 50%;
+        }
+        .cyl-top { transform: translateZ(50px); }
+        .cyl-bottom { transform: translateZ(-50px); }
+        .cyl-side {
+            position: absolute;
+            width: 100px;
+            height: 100px;
+            top: 0; left: 0;
+            transform-style: preserve-3d;
+        }
+        .cyl-segment {
+            position: absolute;
+            width: 15.7px; /* 2*PI*50/20 */
+            height: 100px;
+            left: 42.15px; /* (100-15.7)/2 */
+            background: var(--side-color, rgba(255,255,0,0.7));
+            border-left: 1px solid var(--outline-color, #fff);
+            border-right: 1px solid var(--outline-color, #fff);
+            transform-origin: 50% 50px;
+            transform: rotateY(calc(var(--i) * 18deg)) translateZ(50px);
+        }
+        /* Heart 3D (extruded) */
+        .heart {
+            width: 100px;
+            height: 100px;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform-style: preserve-3d;
+            transition: transform 0.2s;
+            transform: translate(-50%, -50%);
+        }
+        .heart-shape {
+            position: absolute;
+            width: 100px;
+            height: 90px;
+            left: 0;
+            top: 5px;
+            background: var(--face-color, rgba(255,0,100,0.8));
+            border: 2px solid var(--outline-color, #fff);
+            border-bottom: none;
+            border-radius: 50px 50px 0 0;
+            transform: translateZ(0px);
+            z-index: 2;
+            clip-path: path('M50 80 Q 0 30 50 10 Q 100 30 50 80 Z');
+            /* fallback for browsers without path() support: */
+            /*clip-path: polygon(50% 90%, 0% 30%, 50% 10%, 100% 30%);*/
+        }
+        /* Settings button & panel */
+        #settings-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            z-index: 10;
+            background: #444;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            padding: 10px 16px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        #settings-panel {
+            display: none;
+            position: absolute;
+            top: 60px;
+            right: 20px;
+            background: #333;
+            color: #fff;
+            border-radius: 8px;
+            padding: 20px;
+            z-index: 20;
+            box-shadow: 0 2px 10px #0008;
+        }
+        #settings-panel label {
+            display: block;
+            margin: 10px 0 4px;
+        }
+        #settings-panel input[type="color"] {
+            margin-left: 10px;
+        }
+        #settings-panel select, #settings-panel input[type="range"] {
+            margin-left: 10px;
+        }
+        #size-value {
+            display: inline-block;
+            width: 40px;
+            text-align: right;
+            color: #fff;
+        }
+        /* Move handle overlay */
+        .move-handle {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            width: 60px;
+            height: 60px;
+            transform: translate(-50%, -50%);
+            border-radius: 50%;
+            background: rgba(255,255,255,0.08);
+            border: 2px dashed #fff;
+            z-index: 5;
+            cursor: grab;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            pointer-events: auto;
+        }
+        .move-handle:active {
+            cursor: grabbing;
+            background: rgba(255,255,255,0.18);
+        }
+        .move-handle span {
+            color: #fff;
+            font-size: 22px;
+            opacity: 0.5;
+            user-select: none;
+        }
+        #timeline-bar {
+            position: fixed; left: 0; right: 0; bottom: 0; height: 80px; background: #181818;
+            display: flex; align-items: center; padding: 0 40px; z-index: 10;
+        }
+        #timeline {
+            flex: 1; height: 24px; background: #444; border-radius: 8px; margin: 0 16px; position: relative;
+            box-shadow: 0 2px 8px #000a;
+        }
+        .timeline-tick {
+            position: absolute; top: 0; width: 2px; height: 16px; background: #fff3; z-index: 2;
+        }
+        .timeline-label {
+            position: absolute; top: 16px; color: #fff; font-size: 12px; z-index: 3; user-select: none;
+            transform: translateX(-50%);
+        }
+        .keyframe {
+            position: absolute; top: -6px; width: 12px; height: 20px; background: #ff0; border-radius: 3px;
+            border: 2px solid #fff; cursor: pointer; transform: translateX(-6px); z-index: 4;
+        }
+        #scrubber {
+            position: absolute; top: -8px; width: 4px; height: 32px; background: #0ff; border-radius: 2px;
+            pointer-events: none; z-index: 5;
+        }
+    </style>
+</head>
+<body>
+    <div id="splash" style="position:fixed;z-index:1000;top:0;left:0;width:100vw;height:100vh;background:#222;display:flex;align-items:center;justify-content:center;transition:opacity 1s;">
+        <span style="font-size:2.5rem;color:#fff;letter-spacing:2px;">Made By Sirage7474</span>
+    </div>
+    <div id="topbar-btns" style="position: absolute; top: 20px; left: 20px; z-index: 20; display: flex; gap: 12px;">
+        <button id="toggle-timeline-btn">Hide Timeline</button>
+        <button id="play-btn">▶️</button>
+        <button id="toggle-movehandle-btn">Hide Move Handle</button>
+    </div>
+    <button id="settings-btn" style="position: absolute; top: 20px; right: 20px; z-index: 20;">⚙️ Settings</button>
+    <div id="settings-panel">
+        <label>Shape:
+            <select id="shape-select">
+                <option value="cube">Cube</option>
+            </select>
+        </label>
+        <label>Face color:
+            <input type="color" id="face-color" value="#00ffff">
+        </label>
+        <label>Side color:
+            <input type="color" id="side-color" value="#ffff00">
+        </label>
+        <label>Outline color:
+            <input type="color" id="outline-color" value="#ffffff">
+        </label>
+        <label>X size:
+            <input type="range" id="size-x-slider" min="-5" max="5" step="0.01" value="1">
+            <span id="size-x-value">1.00</span>
+        </label>
+        <label>Y size:
+            <input type="range" id="size-y-slider" min="-5" max="5" step="0.01" value="1">
+            <span id="size-y-value">1.00</span>
+        </label>
+        <label>Z size:
+            <input type="range" id="size-z-slider" min="-5" max="5" step="0.01" value="1">
+            <span id="size-z-value">1.00</span>
+        </label>
+        <label>Timeline duration (seconds):
+            <input type="number" id="timeline-duration" min="1" max="60" value="5" style="width:60px;">
+        </label>
+    </div>
+    <div id="timeline-bar">
+        <button id="add-keyframe-btn">Add Keyframe</button>
+        <div id="timeline" style="position:relative; flex:1; margin:0 16px;"></div>
+    </div>
+    <div class="scene">
+        <div class="cube" id="cube">
+            <div class="face front"></div>
+            <div class="face back"></div>
+            <div class="face right"></div>
+            <div class="face left"></div>
+            <div class="face top"></div>
+            <div class="face bottom"></div>
+        </div>
+        <div class="move-handle" id="move-handle"><span>⟳</span></div>
+    </div>
+    <script>
+        // Settings panel logic
+        const settingsBtn = document.getElementById('settings-btn');
+        const settingsPanel = document.getElementById('settings-panel');
+        settingsBtn.onclick = () => {
+            settingsPanel.style.display = settingsPanel.style.display === 'block' ? 'none' : 'block';
+        };
+        // Shape switching
+        const shapeSelect = document.getElementById('shape-select');
+        const cube = document.getElementById('cube');
+        shapeSelect.onchange = function() {
+            cube.style.display = '';
+        };
+        // Color pickers
+        const faceColor = document.getElementById('face-color');
+        const sideColor = document.getElementById('side-color');
+        const outlineColor = document.getElementById('outline-color');
+        function updateColors() {
+            document.documentElement.style.setProperty('--face-color', faceColor.value);
+            document.documentElement.style.setProperty('--side-color', sideColor.value);
+            document.documentElement.style.setProperty('--outline-color', outlineColor.value);
+        }
+        faceColor.oninput = updateColors;
+        sideColor.oninput = updateColors;
+        outlineColor.oninput = updateColors;
+        updateColors();
+        // Size sliders
+        const sizeXSlider = document.getElementById('size-x-slider');
+        const sizeYSlider = document.getElementById('size-y-slider');
+        const sizeZSlider = document.getElementById('size-z-slider');
+        const sizeXValue = document.getElementById('size-x-value');
+        const sizeYValue = document.getElementById('size-y-value');
+        const sizeZValue = document.getElementById('size-z-value');
+        function updateSize() {
+            sizeXValue.textContent = parseFloat(sizeXSlider.value).toFixed(2);
+            sizeYValue.textContent = parseFloat(sizeYSlider.value).toFixed(2);
+            sizeZValue.textContent = parseFloat(sizeZSlider.value).toFixed(2);
+            setShapeRotation();
+        }
+        sizeXSlider.oninput = updateSize;
+        sizeYSlider.oninput = updateSize;
+        sizeZSlider.oninput = updateSize;
+        // Drag to rotate (for both shapes) using move handle
+        const moveHandle = document.getElementById('move-handle');
+        let isDragging = false;
+        let previousX, previousY;
+        let rotationX = -30, rotationY = -45;
+        function setShapeRotation() {
+            const scaleX = parseFloat(sizeXSlider.value);
+            const scaleY = parseFloat(sizeYSlider.value);
+            const scaleZ = parseFloat(sizeZSlider.value);
+            cube.style.transform = `translate(-50%, -50%) rotateX(${rotationX}deg) rotateY(${rotationY}deg) scale3d(${scaleX}, ${scaleY}, ${scaleZ})`;
+        }
+        setShapeRotation();
+        function startDrag(e) {
+            isDragging = true;
+            previousX = e.type.startsWith('touch') ? e.touches[0].clientX : e.clientX;
+            previousY = e.type.startsWith('touch') ? e.touches[0].clientY : e.clientY;
+        }
+        function dragMove(e) {
+            if (!isDragging) return;
+            const clientX = e.type.startsWith('touch') ? e.touches[0].clientX : e.clientX;
+            const clientY = e.type.startsWith('touch') ? e.touches[0].clientY : e.clientY;
+            const deltaX = clientX - previousX;
+            const deltaY = clientY - previousY;
+            rotationY += deltaX * 0.5;
+            rotationX -= deltaY * 0.5;
+            setShapeRotation();
+            previousX = clientX;
+            previousY = clientY;
+        }
+        function endDrag() { isDragging = false; }
+        moveHandle.addEventListener('mousedown', startDrag);
+        document.addEventListener('mousemove', dragMove);
+        document.addEventListener('mouseup', endDrag);
+        moveHandle.addEventListener('touchstart', startDrag);
+        document.addEventListener('touchmove', dragMove);
+        document.addEventListener('touchend', endDrag);
+        // Also allow rotation by clicking on the shape itself (optional)
+        cube.addEventListener('mousedown', startDrag);
+        cube.addEventListener('touchstart', startDrag);
+        // Init size value
+        updateSize();
+
+    // --- Timeline & Keyframes ---
+    const timeline = document.getElementById('timeline');
+    const playBtn = document.getElementById('play-btn');
+    const addKeyframeBtn = document.getElementById('add-keyframe-btn');
+    const timelineDurationInput = document.getElementById('timeline-duration');
+    let TIMELINE_DURATION = parseInt(timelineDurationInput.value, 10);
+    const TIMELINE_WIDTH = 600; // px (for keyframe placement)
+    timeline.style.width = TIMELINE_WIDTH + 'px';
+    let keyframes = [
+        { time: 0, rotationX: -30, rotationY: -45, scaleX: 1, scaleY: 1, scaleZ: 1 },
+        { time: TIMELINE_DURATION, rotationX: -30, rotationY: 315, scaleX: 1, scaleY: 1, scaleZ: 1 }
+    ];
+    timelineDurationInput.oninput = function() {
+        TIMELINE_DURATION = parseInt(this.value, 10);
+        // Update last keyframe to match new duration
+        keyframes[keyframes.length-1].time = TIMELINE_DURATION;
+        drawKeyframes();
+        updateTimelineUI();
+    };
+    let currentTime = 0;
+    let isPlaying = false;
+    let animationFrame = null;
+    let isScrubbing = false;
+    // Scrubber
+    const scrubber = document.createElement('div');
+    scrubber.id = 'scrubber';
+    timeline.appendChild(scrubber);
+    // Draw keyframes
+    function drawKeyframes() {
+        timeline.querySelectorAll('.keyframe').forEach(e => e.remove());
+        timeline.querySelectorAll('.timeline-tick').forEach(e => e.remove());
+        timeline.querySelectorAll('.timeline-label').forEach(e => e.remove());
+        // Draw second ticks and labels
+        for (let s = 0; s <= TIMELINE_DURATION; s++) {
+            const x = (s / TIMELINE_DURATION) * TIMELINE_WIDTH;
+            const tick = document.createElement('div');
+            tick.className = 'timeline-tick';
+            tick.style.left = x + 'px';
+            timeline.appendChild(tick);
+            const label = document.createElement('div');
+            label.className = 'timeline-label';
+            label.style.left = x + 'px';
+            label.textContent = s + 's';
+            timeline.appendChild(label);
+        }
+        keyframes.forEach((kf, i) => {
+            const kfDiv = document.createElement('div');
+            kfDiv.className = 'keyframe';
+            kfDiv.style.left = (kf.time / TIMELINE_DURATION * TIMELINE_WIDTH) + 'px';
+            kfDiv.title = `Keyframe at ${kf.time.toFixed(2)}s`;
+            kfDiv.onclick = (e) => {
+                e.stopPropagation();
+                currentTime = kf.time;
+                updateTimelineUI();
+                updateCubeFromTimeline();
+            };
+            // Add red delete box above keyframe
+            const delBtn = document.createElement('div');
+            delBtn.style.position = 'absolute';
+            delBtn.style.left = '50%';
+            delBtn.style.top = '-16px';
+            delBtn.style.transform = 'translateX(-50%)';
+            delBtn.style.width = '12px';
+            delBtn.style.height = '12px';
+            delBtn.style.background = 'red';
+            delBtn.style.borderRadius = '3px';
+            delBtn.style.cursor = 'pointer';
+            delBtn.title = 'Delete keyframe';
+            delBtn.onclick = (e) => {
+                e.stopPropagation();
+                keyframes.splice(i, 1);
+                // If all keyframes are deleted, add a default at time 0
+                if (keyframes.length === 0) {
+                    keyframes = [
+                        { time: 0, rotationX: -30, rotationY: -45, scaleX: 1, scaleY: 1, scaleZ: 1 }
+                    ];
+                }
+                drawKeyframes();
+                updateTimelineUI();
+                updateCubeFromTimeline();
+            };
+            kfDiv.appendChild(delBtn);
+            timeline.appendChild(kfDiv);
+        });
+    }
+    // Add keyframe at current time
+    addKeyframeBtn.onclick = function() {
+        // Get current cube state
+        const kf = {
+            time: currentTime,
+            rotationX: rotationX,
+            rotationY: rotationY,
+            scaleX: parseFloat(sizeXSlider.value),
+            scaleY: parseFloat(sizeYSlider.value),
+            scaleZ: parseFloat(sizeZSlider.value)
+        };
+        keyframes.push(kf);
+        keyframes.sort((a, b) => a.time - b.time);
+        drawKeyframes();
+    };
+    // Timeline click to scrub
+    timeline.addEventListener('mousedown', function(e) {
+        isScrubbing = true;
+        moveScrubber(e);
+    });
+    document.addEventListener('mousemove', function(e) {
+        if (isScrubbing) moveScrubber(e);
+    });
+    document.addEventListener('mouseup', function() { isScrubbing = false; });
+    function moveScrubber(e) {
+        const rect = timeline.getBoundingClientRect();
+        let x = e.clientX - rect.left;
+        x = Math.max(0, Math.min(TIMELINE_WIDTH, x));
+        currentTime = (x / TIMELINE_WIDTH) * TIMELINE_DURATION;
+        updateTimelineUI();
+        updateCubeFromTimeline();
+    }
+    // Play/pause
+    playBtn.onclick = function() {
+        isPlaying = !isPlaying;
+        playBtn.textContent = isPlaying ? '⏸️' : '▶️';
+        if (isPlaying) animateTimeline();
+        else cancelAnimationFrame(animationFrame);
+    };
+    function animateTimeline() {
+        if (!isPlaying) return;
+        currentTime += 1/60;
+        if (currentTime > TIMELINE_DURATION) {
+            currentTime = 0;
+            isPlaying = false;
+            playBtn.textContent = '▶️';
+            updateTimelineUI();
+            updateCubeFromTimeline();
+            return;
+        }
+        updateTimelineUI();
+        updateCubeFromTimeline();
+        animationFrame = requestAnimationFrame(animateTimeline);
+    }
+    // Interpolate between keyframes
+    function lerp(a, b, t) { return a + (b - a) * t; }
+    function findKeyframePair(time) {
+        if (keyframes.length === 1) return [keyframes[0], keyframes[0]];
+        let prev = keyframes[0], next = keyframes[keyframes.length-1];
+        for (let i = 0; i < keyframes.length-1; i++) {
+            if (time >= keyframes[i].time && time <= keyframes[i+1].time) {
+                prev = keyframes[i]; next = keyframes[i+1]; break;
+            }
+        }
+        return [prev, next];
+    }
+    function updateCubeFromTimeline() {
+        const [kf1, kf2] = findKeyframePair(currentTime);
+        const t = (kf2.time - kf1.time) ? (currentTime - kf1.time) / (kf2.time - kf1.time) : 0;
+        rotationX = lerp(kf1.rotationX, kf2.rotationX, t);
+        rotationY = lerp(kf1.rotationY, kf2.rotationY, t);
+        sizeXSlider.value = lerp(kf1.scaleX, kf2.scaleX, t);
+        sizeYSlider.value = lerp(kf1.scaleY, kf2.scaleY, t);
+        sizeZSlider.value = lerp(kf1.scaleZ, kf2.scaleZ, t);
+        updateSize();
+    }
+    function updateTimelineUI() {
+        scrubber.style.left = (currentTime / TIMELINE_DURATION * TIMELINE_WIDTH) + 'px';
+    }
+    drawKeyframes();
+    updateTimelineUI();
+
+    // Timeline toggle logic
+    const toggleTimelineBtn = document.getElementById('toggle-timeline-btn');
+    const timelineBar = document.getElementById('timeline-bar');
+    toggleTimelineBtn.onclick = function() {
+        if (timelineBar.style.display === 'none') {
+            timelineBar.style.display = '';
+            toggleTimelineBtn.textContent = 'Hide Timeline';
+        } else {
+            timelineBar.style.display = 'none';
+            toggleTimelineBtn.textContent = 'Show Timeline';
+        }
+    };
+
+    // Move handle toggle logic
+    const toggleMoveHandleBtn = document.getElementById('toggle-movehandle-btn');
+    toggleMoveHandleBtn.onclick = function() {
+        if (moveHandle.style.display === 'none') {
+            moveHandle.style.display = '';
+            toggleMoveHandleBtn.textContent = 'Hide Move Handle';
+        } else {
+            moveHandle.style.display = 'none';
+            toggleMoveHandleBtn.textContent = 'Show Move Handle';
+        }
+    };
+
+    // Splash screen logic
+    const splash = document.getElementById('splash');
+    document.body.style.overflow = 'hidden';
+    setTimeout(() => {
+        splash.style.opacity = 0;
+        setTimeout(() => {
+            splash.style.display = 'none';
+            document.body.style.overflow = '';
+        }, 1000);
+    }, 3000);
+
+    </script>
+</body>
+</html>
